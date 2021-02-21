@@ -117,13 +117,17 @@ final class FilmDataStatsGenerator {
             .sorted((d1,d2)-> d1.getReleaseDate().compareTo(d2.getReleaseDate()))
             .collect(Collectors.toList());
 
-    long minDiffBetMovie=9999999; //days
-    for(int i=0;i<sortedFilms.size()-1;i++){
-      long diff=ChronoUnit.DAYS.between(sortedFilms.get(i).getReleaseDate(), sortedFilms.get(i+1).getReleaseDate());
-      if(diff<minDiffBetMovie)
-        minDiffBetMovie=diff;
+    if(sortedFilms.size()>2) {
+      long minDiffBetMovie = 9999999; //days
+      for (int i = 0; i < sortedFilms.size() - 1; i++) {
+        long diff = ChronoUnit.DAYS.between(sortedFilms.get(i).getReleaseDate(), sortedFilms.get(i + 1).getReleaseDate());
+        if (diff < minDiffBetMovie)
+          minDiffBetMovie = diff;
+      }
+      return (int) minDiffBetMovie;
     }
-    return (int)minDiffBetMovie;
+    else
+      return 0;
 
   }
 
