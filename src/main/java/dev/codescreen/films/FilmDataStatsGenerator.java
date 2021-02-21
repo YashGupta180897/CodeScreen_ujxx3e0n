@@ -1,5 +1,8 @@
 package dev.codescreen.films;
 
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 /**
  * Generates various statistics about the films data set returned by the given {@link FilmsAPIService}
  */
@@ -7,8 +10,12 @@ final class FilmDataStatsGenerator {
 
   private final FilmsAPIService filmsAPIService;
 
+  private static List<Film> allFilms;
+
   static FilmDataStatsGenerator of(FilmsAPIService filmsAPIService) {
-    return new FilmDataStatsGenerator(filmsAPIService);
+    FilmDataStatsGenerator filmDataStatsGenerator= new FilmDataStatsGenerator(filmsAPIService);
+    allFilms=filmsAPIService.getAllFilms();
+    return filmDataStatsGenerator;
   }
 
   private FilmDataStatsGenerator(FilmsAPIService filmsAPIService) {
@@ -23,8 +30,12 @@ final class FilmDataStatsGenerator {
    * @throws IllegalArgumentException if the service contains no films directed by the given director
    */
   String getBestRatedFilm(String directorName) {
-    //TODO Implement
-    throw new UnsupportedOperationException("Not implemented, yet...");
+    Film bestRatedFilm = allFilms.stream()
+            .filter(film -> film.getDirectorName().equalsIgnoreCase(directorName))
+            .max(Comparator.comparingDouble(Film::getRating))
+            .get();
+
+    return bestRatedFilm.getName();
   }
 
   /**
@@ -34,8 +45,12 @@ final class FilmDataStatsGenerator {
    * @return the name of the director who has directed the most films in the CodeScreen Film service.
    */
   String getDirectorWithMostFilms() {
-    //TODO Implement
-    throw new UnsupportedOperationException("Not implemented, yet...");
+    Map.Entry<String, Long> maxEntry = allFilms.stream()
+            .collect(Collectors.groupingBy(Film::getDirectorName, Collectors.counting()))
+            .entrySet().stream()
+            .max(Comparator.comparing(Map.Entry::getValue))
+            .get();
+    return maxEntry.getKey();
   }
 
   /**
@@ -46,8 +61,10 @@ final class FilmDataStatsGenerator {
    * @throws IllegalArgumentException if the service contains no films directed by the given director
    */
   double getAverageRating(String directorName) {
-    //TODO Implement
-    throw new UnsupportedOperationException("Not implemented, yet...");
+    return Math.round(allFilms.stream()
+            .filter(film -> film.getDirectorName().equalsIgnoreCase(directorName))
+            .mapToDouble(Film::getRating)
+            .average().orElse(0));
   }
 
   /**
@@ -94,8 +111,20 @@ final class FilmDataStatsGenerator {
    * @throws IllegalArgumentException if the service contains no films directed by the given director
    */
   int getShortestNumberOfDaysBetweenFilmReleases(String directorName) {
-    //TODO Implement
-    throw new UnsupportedOperationException("Not implemented, yet...");
+
+    List<Film> sortedFilms = allFilms.stream()
+            .filter(film -> film.getDirectorName().equalsIgnoreCase(directorName))
+            .sorted((d1,d2)-> d1.getReleaseDate().compareTo(d2.getReleaseDate()))
+            .collect(Collectors.toList());
+
+    long minDiffBetMovie=9999999; //days
+    for(int i=0;i<sortedFilms.size()-1;i++){
+      long diff=ChronoUnit.DAYS.between(sortedFilms.get(i).getReleaseDate(), sortedFilms.get(i+1).getReleaseDate());
+      if(diff<minDiffBetMovie)
+        minDiffBetMovie=diff;
+    }
+    return (int)minDiffBetMovie;
+
   }
 
 }
